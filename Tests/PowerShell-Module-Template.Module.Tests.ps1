@@ -2,7 +2,7 @@ $module = (($MyInvocation.MyCommand) -split "\.Module")[0]
 $module
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$here = $here -replace "\\Tests","\\$module"
+$here = $here -replace "\\Tests","\$module"
 $here
 
 Describe "$module Module Tests" {
@@ -18,7 +18,7 @@ Describe "$module Module Tests" {
         }
    
         It "folder has functions" {
-            "$here\*\*.ps1" | Should Exist
+            "$here\*\*.ps1" | Should -Exist
         }
    
         It "is valid PowerShell code" {
@@ -29,7 +29,7 @@ Describe "$module Module Tests" {
         }
     }
     $functions = @()
-    foreach ($file in (Get-ChildItem "..\*.ps1" -Recurse)) {
+    foreach ($file in (Get-ChildItem "$module\Private\*.ps1" -Recurse) + (Get-ChildItem "$module\Public\*.ps1" -Recurse)) {
         if (-not $file.Name.Contains(".Tests")) {
             $functions += $file
         }
@@ -77,7 +77,7 @@ Describe "$module Module Tests" {
         }
         Context "Function $functionName Tests" {
             It "$functionName.Tests.ps1 should exist" {
-                ".\$functionName.Tests.ps1" | Should Exist
+                ".\Tests\$functionName.Tests.ps1" | Should Exist
             }
         }
     }

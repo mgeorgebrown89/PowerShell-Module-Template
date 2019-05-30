@@ -2,9 +2,8 @@ param(
     [string]
     $moduleName,
 
-    [Parameter(Mandatory)]
     [string]
-    $author,
+    $author = $ENV:USERNAME,
 
     [string]
     $companyName = "unknown",
@@ -63,7 +62,7 @@ $module = (($MyInvocation.MyCommand) -split "\.Module")[0]
 $module
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$here = $here -replace "\\Tests","\\$module"
+$here = $here -replace "\\Tests","\$module"
 $here
 
 Describe "$module Module Tests" {
@@ -79,7 +78,7 @@ Describe "$module Module Tests" {
         }
    
         It "folder has functions" {
-            "$here\*\*.ps1" | Should Exist
+            "$here\*\*.ps1" | Should -Exist
         }
    
         It "is valid PowerShell code" {
@@ -90,7 +89,7 @@ Describe "$module Module Tests" {
         }
     }
     $functions = @()
-    foreach ($file in (Get-ChildItem "..\*.ps1" -Recurse)) {
+    foreach ($file in (Get-ChildItem "$module\Private\*.ps1" -Recurse) + (Get-ChildItem "$module\Public\*.ps1" -Recurse)) {
         if (-not $file.Name.Contains(".Tests")) {
             $functions += $file
         }
@@ -138,7 +137,7 @@ Describe "$module Module Tests" {
         }
         Context "Function $functionName Tests" {
             It "$functionName.Tests.ps1 should exist" {
-                ".\$functionName.Tests.ps1" | Should Exist
+                ".\Tests\$functionName.Tests.ps1" | Should Exist
             }
         }
     }
@@ -146,3 +145,32 @@ Describe "$module Module Tests" {
 '@
 
 New-Item -ItemType File -Name "$moduleName.Module.Tests.ps1" -Path $ModuleTestsDirectory -Value $moduleTestValue
+
+# create a dummy function to show passing tests
+$dummyFunctionValue = @'
+function Test-Function {
+    <#
+    .SYNOPSIS
+        Shows what a good function looks like.
+    .DESCRIPTION
+        This function shows what a good function looks like. It needs a short synopsis, a longer description, and at least one example.
+        It should use CmdletBinding() and take parameters.
+    .EXAMPLE
+        Test-Function -name "Michael"
+    #>
+    [CmdletBinding()]
+    param(
+        [string]
+        $name
+    )
+
+    Write-Verbose "Hello, $name."
+}
+'@
+$dummyFunctionFile = New-Item -ItemType File -Name "Test-Function.ps1" -Path $PublicFunctionsDirectory -Value $dummyFunctionValue
+
+# create a test file for the dummy function
+
+$dummyTestsValue = @'
+'@
+$dummyTestFile = New-Item -ItemType File -Name "Test-Function.Tests.ps1" -Path $ModuleTestsDirectory -Value $dummyTestsValue
