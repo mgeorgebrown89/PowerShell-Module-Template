@@ -77,10 +77,6 @@ Describe "$module Module Tests" {
             "$here\$module.psd1" | Should -FileContentMatch "$module.psm1"
         }
    
-        It "folder has functions" {
-            "$here\*\*.ps1" | Should -Exist
-        }
-   
         It "is valid PowerShell code" {
             $psFile = Get-Content -Path "$here\$module.psm1" -ErrorAction Stop
             $errors = $null
@@ -89,7 +85,13 @@ Describe "$module Module Tests" {
         }
     }
     $functions = @()
-    foreach ($file in (Get-ChildItem "$module\Private\*.ps1" -Recurse) + (Get-ChildItem "$module\Public\*.ps1" -Recurse)) {
+    $PSScriptRoot
+    foreach ($file in (Get-ChildItem "$here\Private\*.ps1" -Recurse)) {
+        if (-not $file.Name.Contains(".Tests")) {
+            $functions += $file
+        }
+    }
+    foreach ($file in (Get-ChildItem "$here\Public\*.ps1" -Recurse)) {
         if (-not $file.Name.Contains(".Tests")) {
             $functions += $file
         }
